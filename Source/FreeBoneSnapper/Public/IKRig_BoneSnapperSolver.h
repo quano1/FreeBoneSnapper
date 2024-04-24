@@ -9,7 +9,7 @@
 #include "Rig/Solvers/IKRigSolver.h"
 #endif
 #endif
-
+#include "FreeBoneSnapper.h"
 #include "IKRig_BoneSnapperSolver.generated.h"
 
 UENUM(BlueprintType)

@@ -14,8 +14,6 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"EngineVersion": "5.3.0",
-	"PlatformAllowList": [ "Win64" ],
 	"Plugins": [
 		{
 			"Name": "IKRig",
@@ -26,7 +24,8 @@
 		{
 			"Name": "FreeBoneSnapper",
 			"Type": "Editor",
-			"LoadingPhase": "PostDefault"
+			"LoadingPhase": "PostDefault",
+			"PlatformAllowList": [ "Win64", "Mac"]
 		}
 	]
 }
