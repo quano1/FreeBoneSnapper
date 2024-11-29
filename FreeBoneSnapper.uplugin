@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 2,
-	"VersionName": "1.0.0",
+	"VersionName": "1.0.1",
 	"FriendlyName": "FreeBoneSnapper",
 	"Description": "IKRig Bone Snapper Solver",
 	"Category": "Retarget",
@@ -14,6 +14,7 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
+	"PlatformAllowList": [ "Win64", "Mac", "Linux" ],
 	"Plugins": [
 		{
 			"Name": "IKRig",
@@ -25,7 +26,6 @@
 			"Name": "FreeBoneSnapper",
 			"Type": "Editor",
 			"LoadingPhase": "PostDefault",
-			"PlatformAllowList": [ "Win64", "Mac"]
 		}
 	]
 }
