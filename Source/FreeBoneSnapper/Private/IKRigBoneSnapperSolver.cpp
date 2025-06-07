@@ -1,31 +1,21 @@
-// Copyright longlt00502@gmail.com 2023. All rights reserved.
+// Copyright longlt00502@gmail.com 2023-2025. All rights reserved.
 
-#include "IKRig_BoneSnapperSolver.h"
+#include "IKRigBoneSnapperSolver.h"
 
 #include "Misc/TransactionObjectEvent.h"
 
-#if ENGINE_MAJOR_VERSION == 5
-#if ENGINE_MINOR_VERSION <= 2
-#include "IKRigDataTypes.h"
-#include "IKRigSkeleton.h"
-#else
 #include "Rig/IKRigDataTypes.h"
 #include "Rig/IKRigSkeleton.h"
-#endif
-#endif
-
 
 #include "SlateBasics.h"
 #include "PropertyHandle.h"
 #include "SSearchableComboBox.h"
 
-// #include "tll/log.h"
+#include UE_INLINE_GENERATED_CPP_BY_NAME(IKRigBoneSnapperSolver)
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(IKRig_BoneSnapperSolver)
+#define LOCTEXT_NAMESPACE "FIKRigBoneSnapperSolver"
 
-#define LOCTEXT_NAMESPACE "UIKRig_BoneSnapperSolver"
-
-void UIKRig_BoneSnapperSolver::Initialize(const FIKRigSkeleton& IKRigSkeleton)
+void FIKRigBoneSnapperSolver::Initialize(const FIKRigSkeleton& IKRigSkeleton)
 {
 	BoneDepths.SetNum(0);
 
@@ -44,11 +34,11 @@ void UIKRig_BoneSnapperSolver::Initialize(const FIKRigSkeleton& IKRigSkeleton)
 	}
 }
 
-void UIKRig_BoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRigGoalContainer& Goals)
+void FIKRigBoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRigGoalContainer& Goals)
 {
 	if(Dirty)
 	{
-		BoneSettings.Sort([this, &IKRigSkeleton](const UIKRig_FBoneSnapperSettings& A, const UIKRig_FBoneSnapperSettings& B) {
+		BoneSettings.Sort([this, &IKRigSkeleton](const FIKRigBoneSnapperBoneSettings& A, const FIKRigBoneSnapperBoneSettings& B) {
 			auto AId = IKRigSkeleton.GetBoneIndexFromName(A.SourceBone);
 			auto BId = IKRigSkeleton.GetBoneIndexFromName(B.SourceBone);
 
@@ -64,7 +54,7 @@ void UIKRig_BoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRig
 
 		for(auto const &Settings : BoneSettings)
 		{
-			UE_LOG(FreeBoneSnapper, Verbose, TEXT("Snap %s to %s"), *Settings->SourceBone.ToString(), *Settings->DestinationBone.ToString());
+			UE_LOG(FreeBoneSnapper, Verbose, TEXT("Snap %s to %s"), *Settings.SourceBone.ToString(), *Settings.DestinationBone.ToString());
 		}
 
 		Dirty = false;
@@ -76,12 +66,12 @@ void UIKRig_BoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRig
 
 	bool IsDirty = false;
 
-	if(RootSnapBoneName != NAME_None)
+	if(SolverSettings.RootBone != NAME_None)
 	{
-		auto RootSnapBoneId = IKRigSkeleton.GetBoneIndexFromName(RootSnapBoneName);
+		auto RootSnapBoneId = IKRigSkeleton.GetBoneIndexFromName(SolverSettings.RootBone);
 
 
-		if(InPlace)
+		if(SolverSettings.InPlace)
 		{
 			CurrentPoseLocal[RootSnapBoneId].SetTranslation(FVector(0, 0, CurrentPoseLocal[RootSnapBoneId].GetTranslation().Z));
 			IsDirty = true;
@@ -127,15 +117,15 @@ void UIKRig_BoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRig
 
 	for(auto const &Chain: BoneSettings)
 	{
-		auto SrcId = IKRigSkeleton.GetBoneIndexFromName(Chain->SourceBone);
-		auto DstId = IKRigSkeleton.GetBoneIndexFromName(Chain->DestinationBone);
+		auto SrcId = IKRigSkeleton.GetBoneIndexFromName(Chain.SourceBone);
+		auto DstId = IKRigSkeleton.GetBoneIndexFromName(Chain.DestinationBone);
 
 		if(SrcId == INDEX_NONE || DstId == INDEX_NONE)
 		{
 			continue;
 		}
 
-		if(Chain->SnapMode == 0)
+		if(Chain.SnapMode == 0)
 		{
 			continue;
 		}
@@ -145,22 +135,22 @@ void UIKRig_BoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRig
 
 		auto Delta = DstGlobalTransform.GetRelativeTransform(SrcGlobalTransform);
 
-		if(!Chain->IsSet(ESnapMode::Translation))
+		if(!Chain.IsSet(ESnapMode::Translation))
 		{
 			Delta.SetTranslation(FVector::ZeroVector);
 		}
 
-		if(!Chain->IsSet(ESnapMode::Rotation))
+		if(!Chain.IsSet(ESnapMode::Rotation))
 		{
 			Delta.SetRotation(FQuat::Identity);
 		}
 
-		if(!Chain->IsSet(ESnapMode::Scale))
+		if(!Chain.IsSet(ESnapMode::Scale))
 		{
 			Delta.SetScale3D(FVector::OneVector);
 		}
 
-		Delta = Chain->Offset * Delta;
+		Delta = Chain.Offset * Delta;
 
 		CurrentPoseLocal[SrcId] = Delta * CurrentPoseLocal[SrcId];
 
@@ -183,14 +173,14 @@ void UIKRig_BoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRig
 
 #if WITH_EDITOR
 
-FText UIKRig_BoneSnapperSolver::GetNiceName() const
+FText FIKRigBoneSnapperSolver::GetNiceName() const
 {
 	return FText(LOCTEXT("SolverName", "Bone Snapper"));
 }
 
-bool UIKRig_BoneSnapperSolver::GetWarningMessage(FText& OutWarningMessage) const
+bool FIKRigBoneSnapperSolver::GetWarningMessage(FText& OutWarningMessage) const
 { 
-	if(BoneSettings.IsEmpty() && RootSnapBoneName == NAME_None)
+	if(BoneSettings.IsEmpty() && SolverSettings.RootBone == NAME_None)
 	{
 		OutWarningMessage = FText(LOCTEXT("MissingData", "Missing Data"));
 		return true;
@@ -199,11 +189,11 @@ bool UIKRig_BoneSnapperSolver::GetWarningMessage(FText& OutWarningMessage) const
 	return false;
 };
 
-bool UIKRig_BoneSnapperSolver::IsBoneAffectedBySolver(const FName& BoneName, const FIKRigSkeleton& IKRigSkeleton) const
+bool FIKRigBoneSnapperSolver::IsBoneAffectedBySolver(const FName& BoneName, const FIKRigSkeleton& IKRigSkeleton) const
 {
 	for(auto const &Chain : BoneSettings)
 	{
-		if(Chain->SourceBone == BoneName)
+		if(Chain.SourceBone == BoneName)
 		{
 			return true;
 		}
@@ -212,54 +202,68 @@ bool UIKRig_BoneSnapperSolver::IsBoneAffectedBySolver(const FName& BoneName, con
 	return false;
 }
 
-void UIKRig_BoneSnapperSolver::AddBoneSetting(const FName& BoneName)
+void FIKRigBoneSnapperSolver::AddSettingsToBone(const FName& BoneName)
 {
-	if (GetBoneSetting(BoneName))
+	if (GetBoneSettings(BoneName))
 	{
 		return; // already have settings on this bone
 	}
 
-	UIKRig_FBoneSnapperSettings* NewBoneSettings = NewObject<UIKRig_FBoneSnapperSettings>(this, UIKRig_FBoneSnapperSettings::StaticClass());
-	NewBoneSettings->SourceBone = BoneName;
-	NewBoneSettings->Solver = this;
-	BoneSettings.Add(NewBoneSettings);
+	auto &NewBoneSettings = BoneSettings.Add_GetRef(FIKRigBoneSnapperBoneSettings{});
+	NewBoneSettings.SourceBone = BoneName;
 }
 
-void UIKRig_BoneSnapperSolver::RemoveBoneSetting(const FName& BoneName)
+void FIKRigBoneSnapperSolver::RemoveSettingsOnBone(const FName& BoneName)
 {
-	UIKRig_FBoneSnapperSettings* BoneSettingToRemove = nullptr; 
-	for (UIKRig_FBoneSnapperSettings* BoneSetting : BoneSettings)
-	{
-		if (BoneSetting->SourceBone == BoneName)
-		{
-			BoneSettingToRemove = BoneSetting;
-			break; // can only be one with this name
-		}
-	}
+	FIKRigBoneSnapperBoneSettings const *BoneSettingToRemove = nullptr; 
 
-	if (BoneSettingToRemove)
+	BoneSettings.RemoveAll([&](FIKRigBoneSnapperBoneSettings const &BoneSetting)
 	{
-		BoneSettings.Remove(BoneSettingToRemove);
-	}
+		return BoneSetting.SourceBone == BoneName;
+	});
 }
 
-UObject* UIKRig_BoneSnapperSolver::GetBoneSetting(const FName& BoneName) const
+FIKRigBoneSettingsBase *FIKRigBoneSnapperSolver::GetBoneSettings(const FName& BoneName)
 {
-	for (UIKRig_FBoneSnapperSettings* BoneSetting : BoneSettings)
+	for (FIKRigBoneSnapperBoneSettings &BoneSetting : BoneSettings)
 	{
-		if (BoneSetting && BoneSetting->SourceBone == BoneName)
+		if (BoneSetting.SourceBone == BoneName)
 		{
-			return BoneSetting;
+			return &BoneSetting;
 		}
 	}
 	
 	return nullptr;
 }
 
-void UIKRig_FBoneSnapperSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void FIKRigBoneSnapperSolver::GetBonesWithSettings(TSet<FName>& OutBonesWithSettings) const
 {
-	if(PropertyChangedEvent.GetPropertyName() == TEXT("DestinationBone"))
-		Solver->Dirty = true;
+	for (const FIKRigBoneSnapperBoneSettings& BoneSetting : BoneSettings)
+	{
+		OutBonesWithSettings.Add(BoneSetting.SourceBone);
+	}
+}
+
+const UScriptStruct* FIKRigBoneSnapperSolver::GetBoneSettingsType() const
+{
+	return FIKRigBoneSnapperBoneSettings::StaticStruct();
+}
+
+bool FIKRigBoneSnapperSolver::UsesStartBone() const { return true; };
+FName FIKRigBoneSnapperSolver::GetStartBone() const { return SolverSettings.RootBone; };
+void FIKRigBoneSnapperSolver::SetStartBone(const FName& InRootBoneName) { SolverSettings.RootBone = InRootBoneName; };
+
+bool FIKRigBoneSnapperSolver::HasSettingsOnBone(const FName& InBoneName) const
+{
+	for (auto &BoneSetting : BoneSettings)
+	{
+		if (BoneSetting.SourceBone == InBoneName || BoneSetting.DestinationBone == InBoneName)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 #endif

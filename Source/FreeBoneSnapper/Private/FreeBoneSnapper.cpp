@@ -1,4 +1,4 @@
-// Copyright longlt00502@gmail.com 2023. All rights reserved.
+// Copyright longlt00502@gmail.com 2023-2025. All rights reserved.
 
 #include "FreeBoneSnapper.h"
 

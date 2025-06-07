@@ -1,4 +1,4 @@
-// Copyright longlt00502@gmail.com 2023. All rights reserved.
+// Copyright longlt00502@gmail.com 2023-2025. All rights reserved.
 
 using UnrealBuildTool;
 
@@ -9,8 +9,6 @@ public class FreeBoneSnapper : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				// ... add other private include paths required here ...
-				// System.IO.Path.Combine(GetModuleDirectory("VersatileEquipment"), "Public"),
 			}
 			);
 		PrivateDependencyModuleNames.AddRange(
