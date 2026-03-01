@@ -11,6 +11,8 @@
 #include "PropertyHandle.h"
 #include "SSearchableComboBox.h"
 
+#include "RetargetEditor/IKRetargeterController.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(IKRigBoneSnapperSolver)
 
 #define LOCTEXT_NAMESPACE "FIKRigBoneSnapperSolver"
@@ -82,7 +84,7 @@ void FIKRigBoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRigG
 				{
 					// root always in global space already, no conversion required
 					CurrentPoseGlobal[BoneIndex] = CurrentPoseLocal[BoneIndex];
-					continue; 
+					continue;
 				}
 				const FTransform& ChildLocalTransform = CurrentPoseLocal[BoneIndex];
 				const FTransform& ParentGlobalTransform = CurrentPoseGlobal[ParentIndex];
@@ -161,7 +163,7 @@ void FIKRigBoneSnapperSolver::Solve(FIKRigSkeleton& IKRigSkeleton, const FIKRigG
 			{
 				// root always in global space already, no conversion required
 				CurrentPoseGlobal[BoneIndex] = CurrentPoseLocal[BoneIndex];
-				continue; 
+				continue;
 			}
 			const FTransform& ChildLocalTransform = CurrentPoseLocal[BoneIndex];
 			const FTransform& ParentGlobalTransform = CurrentPoseGlobal[ParentIndex];
@@ -179,7 +181,7 @@ FText FIKRigBoneSnapperSolver::GetNiceName() const
 }
 
 bool FIKRigBoneSnapperSolver::GetWarningMessage(FText& OutWarningMessage) const
-{ 
+{
 	if(BoneSettings.IsEmpty() && SolverSettings.RootBone == NAME_None)
 	{
 		OutWarningMessage = FText(LOCTEXT("MissingData", "Missing Data"));
@@ -202,6 +204,8 @@ bool FIKRigBoneSnapperSolver::IsBoneAffectedBySolver(const FName& BoneName, cons
 	return false;
 }
 
+#endif
+
 void FIKRigBoneSnapperSolver::AddSettingsToBone(const FName& BoneName)
 {
 	if (GetBoneSettings(BoneName))
@@ -215,7 +219,7 @@ void FIKRigBoneSnapperSolver::AddSettingsToBone(const FName& BoneName)
 
 void FIKRigBoneSnapperSolver::RemoveSettingsOnBone(const FName& BoneName)
 {
-	FIKRigBoneSnapperBoneSettings const *BoneSettingToRemove = nullptr; 
+	FIKRigBoneSnapperBoneSettings const *BoneSettingToRemove = nullptr;
 
 	BoneSettings.RemoveAll([&](FIKRigBoneSnapperBoneSettings const &BoneSetting)
 	{
@@ -232,7 +236,7 @@ FIKRigBoneSettingsBase *FIKRigBoneSnapperSolver::GetBoneSettings(const FName& Bo
 			return &BoneSetting;
 		}
 	}
-	
+
 	return nullptr;
 }
 
@@ -266,7 +270,120 @@ bool FIKRigBoneSnapperSolver::HasSettingsOnBone(const FName& InBoneName) const
 	return false;
 }
 
-#endif
+/// RIDICULOUS!
+
+// ********** Begin Class UIKRigStructViewer ****************************************
+FClassRegistrationInfo Z_Registration_Info_UClass_UIKRigStructViewer;
+UClass* UIKRigStructViewer::GetPrivateStaticClass()
+{
+	using TClass = UIKRigStructViewer;
+	if (!Z_Registration_Info_UClass_UIKRigStructViewer.InnerSingleton)
+	{
+		GetPrivateStaticClassBody(
+			TClass::StaticPackage(),
+			TEXT("IKRigBoneSnapperSolverController"),
+			Z_Registration_Info_UClass_UIKRigStructViewer.InnerSingleton,
+			StaticRegisterNativesUIKRigStructViewer,
+			sizeof(TClass),
+			alignof(TClass),
+			TClass::StaticClassFlags,
+			TClass::StaticClassCastFlags(),
+			TClass::StaticConfigName(),
+			(UClass::ClassConstructorType)InternalConstructor<TClass>,
+			(UClass::ClassVTableHelperCtorCallerType)InternalVTableHelperCtorCaller<TClass>,
+			UOBJECT_CPPCLASS_STATICFUNCTIONS_FORCLASS(TClass),
+			&TClass::Super::StaticClass,
+			&TClass::WithinClass::StaticClass
+		);
+	}
+	return Z_Registration_Info_UClass_UIKRigStructViewer.InnerSingleton;
+}
+
+void UIKRigStructViewer::StaticRegisterNativesUIKRigStructViewer()
+{
+}
+
+UIKRigStructViewer::UIKRigStructViewer(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {}
+DEFINE_VTABLE_PTR_HELPER_CTOR_NS(, UIKRigStructViewer);
+UIKRigStructViewer::~UIKRigStructViewer() {}
+// ********** End Class UIKRigStructViewer ******************************************
+
+USkeleton* UIKRigStructViewer::GetSkeleton(bool& bInvalidSkeletonIsError, const IPropertyHandle* PropertyHandle)
+{
+	if (!StructToView.IsValid())
+	{
+		return nullptr;
+	}
+
+	// NOTE: it's not ideal that we are hardcoding supported types here, but because UStruct's do not support multiple
+	// inheritance we cannot use an interface to identify skeleton providers as we normally would.
+	if (StructToView.Type->IsChildOf(FIKRetargetOpSettingsBase::StaticStruct()))
+	{
+		FName PropertyName = PropertyHandle->GetProperty()->GetFName();
+		uint8* StructMemory = StructToView.MemoryProvider();
+		FIKRetargetOpSettingsBase* SkeletonProvider = reinterpret_cast<FIKRetargetOpSettingsBase*>(StructMemory);
+		return SkeletonProvider->GetSkeleton(PropertyName);
+	}
+
+	return nullptr;
+}
+
+// ********** Begin Class UIKRigStructWrapperBase ****************************************
+FClassRegistrationInfo Z_Registration_Info_UClass_UIKRigStructWrapperBase;
+UClass* UIKRigStructWrapperBase::GetPrivateStaticClass()
+{
+	using TClass = UIKRigStructWrapperBase;
+	if (!Z_Registration_Info_UClass_UIKRigStructWrapperBase.InnerSingleton)
+	{
+		GetPrivateStaticClassBody(
+			TClass::StaticPackage(),
+			TEXT("IKRigBoneSnapperSolverController"),
+			Z_Registration_Info_UClass_UIKRigStructWrapperBase.InnerSingleton,
+			StaticRegisterNativesUIKRigStructWrapperBase,
+			sizeof(TClass),
+			alignof(TClass),
+			TClass::StaticClassFlags,
+			TClass::StaticClassCastFlags(),
+			TClass::StaticConfigName(),
+			(UClass::ClassConstructorType)InternalConstructor<TClass>,
+			(UClass::ClassVTableHelperCtorCallerType)InternalVTableHelperCtorCaller<TClass>,
+			UOBJECT_CPPCLASS_STATICFUNCTIONS_FORCLASS(TClass),
+			&TClass::Super::StaticClass,
+			&TClass::WithinClass::StaticClass
+		);
+	}
+	return Z_Registration_Info_UClass_UIKRigStructWrapperBase.InnerSingleton;
+}
+void UIKRigStructWrapperBase::StaticRegisterNativesUIKRigStructWrapperBase()
+{
+}
+UIKRigStructWrapperBase::UIKRigStructWrapperBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {}
+DEFINE_VTABLE_PTR_HELPER_CTOR_NS(, UIKRigStructWrapperBase);
+UIKRigStructWrapperBase::~UIKRigStructWrapperBase() {}
+// ********** End Class UIKRigStructWrapperBase ******************************************
+
+bool UIKRigStructWrapperBase::IsValid() const
+{
+	return StructToView.IsValid() && WrapperProperty != nullptr;
+}
+
+void UIKRigStructWrapperBase::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	UpdateWrappedStructWithLatestValues();
+}
+
+void UIKRigStructWrapperBase::UpdateWrappedStructWithLatestValues()
+{
+	if (!(StructToView.IsValid() && WrapperProperty))
+	{
+		return;
+	}
+
+	// push wrapper values to the wrapped struct
+	void* WrapperMemory = WrapperProperty->ContainerPtrToValuePtr<void>(this);
+	void* WrappedMemory = StructToView.MemoryProvider();
+	StructToView.Type->CopyScriptStruct(WrappedMemory, WrapperMemory);
+}
 
 #undef LOCTEXT_NAMESPACE
 

@@ -6,9 +6,10 @@ public class FreeBoneSnapper : ModuleRules
 {
 	public FreeBoneSnapper(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+				PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		PrivateIncludePaths.AddRange(
 			new string[] {
+				// ... add other private include paths required here ...
 			}
 			);
 		PrivateDependencyModuleNames.AddRange(
@@ -16,16 +17,22 @@ public class FreeBoneSnapper : ModuleRules
 			{
 				"Projects",
 				"EditorSubsystem",
+				"DeveloperSettings",
 				"EditorFramework",
 				"UnrealEd",
+				"ToolMenus",
 				"CoreUObject",
 				"Engine",
+				"Slate",
+				"SlateCore",
+				"InputCore",
 				"Persona",
-
 				"Core",
+				"ToolWidgets",
+				"MessageLog",
 				"IKRig",
-				// ... add private dependencies that you statically link with here ...	
+				"IKRigEditor",
 			}
-			);
+        );
 	}
 }
